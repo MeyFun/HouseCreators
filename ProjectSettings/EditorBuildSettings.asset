@@ -8,6 +8,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Level_Workshop.unity
+    guid: cd2cd1508729c9b42b4cc7bdda07940d
+  - enabled: 1
+    path: Assets/Scenes/Blockout_Level.unity
+    guid: 5e15663b9a7003e49b2a53bf0886c128
+  - enabled: 1
+    path: Assets/Scenes/Workshop_Room.unity
+    guid: f15fbf3f211d53e4787bd68fcff351d4
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
