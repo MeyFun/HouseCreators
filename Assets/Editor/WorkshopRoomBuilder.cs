@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using HouseCreators.Blockout;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -164,12 +163,8 @@ namespace HouseCreators.EditorTools
             DoorAndWardrobe(Group(room, "Route_5_Door_Wardrobe"));
             Lighting(Group(room, "Lights"));
 
-            var routeGizmo = new GameObject("RouteGizmo").AddComponent<BlockoutRoute>();
-            routeGizmo.transform.SetParent(room, false);
-            routeGizmo.color = new Color(1f, 0.3f, 0.8f);
-            routeGizmo.points = Route.Select(n => n.pos + Vector3.up * 0.3f).ToArray();
-
             BuildPlayer(Route[0].pos + Vector3.up * 0.05f, 135f);
+            WorkshopNaming.Apply();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             var scenes = EditorBuildSettings.scenes.ToList();
@@ -252,8 +247,6 @@ namespace HouseCreators.EditorTools
                 tube.transform.rotation = Quaternion.Euler(90, 0, 0);
                 tube.transform.position = V(tx, AtticFloor + 0.5f, (z0 + 8 + z1) * 0.5f);
             }
-            Label(p, "Чердак: балки, утеплитель, труба, под коробом — ползком", V(40, AtticFloor + 4, 118));
-            Label(p, "Корпус светильника: ползком до разбитого рассеивателя", V(71, AtticFloor + 4, 80));
         }
 
         static void Decor(Transform p)
@@ -335,7 +328,6 @@ namespace HouseCreators.EditorTools
             // Кабели к пульту
             Box(p, "Cable_1", V(46, 0, 38), V(60, 0.4f, 39.2f), "Cable");
             Box(p, "Cable_2", V(46.5f, 0, 41), V(60, 0.4f, 42.2f), "Cable");
-            Label(p, "СТАРТ: капсула уменьшения\n(учёный включил её и уменьшился)", c + Vector3.up * 8);
         }
 
         // Пульт капсулы высотой 56 м: панель с переключателем режима и кнопкой на уступе 34 м
@@ -357,7 +349,6 @@ namespace HouseCreators.EditorTools
             Box(p, "Mode_Label_Grow", V(65, 34, 23.5f), V(66.5f, 34.05f, 25), "Plastic_Red");
             Cyl(p, "BigButton_Base", V(72, 34, 21), 2f, 0.4f, "MetalDark");
             Cyl(p, "BigButton", V(72, 34.4f, 21), 1.5f, 0.6f, "Button");
-            Label(p, "ПУЛЬТ КАПСУЛЫ: переключить режим на «увеличение» и нажать кнопку", V(68, 41, 22));
         }
 
         // ================= Маршрут 1: пол =================
@@ -398,7 +389,6 @@ namespace HouseCreators.EditorTools
 
             Cyl(p, "R9_Bin", V(85, 0, 33), 5f, 14.4f, "BinMetal");
             Cyl(p, "R9_Bin_Lid", V(85, 14.4f, 33), 5.2f, 0.6f, "MetalDark");
-            Label(p, "1. Книги → коробки → банка → ящик → кресло → ведро", V(60, 16, 12));
         }
 
         // ================= Маршрут 2: комод с ящиками-лесенкой =================
@@ -417,7 +407,6 @@ namespace HouseCreators.EditorTools
                 Box(drawer, "Papers", V(x0 + 0.6f, yTop - 0.2f, 33.5f), V(121, yTop, 44.5f), "Paper");
                 Box(drawer, "Handle", V(x0 - 0.5f, yTop - 1.1f, 37.5f), V(x0, yTop - 0.5f, 40.5f), "Brass");
             }
-            Label(p, "2. Комод: ящики выдвинуты лесенкой → стол", V(105, 30, 39));
         }
 
         // ================= Маршрут 3: стол и полки =================
@@ -456,7 +445,6 @@ namespace HouseCreators.EditorTools
             BookStack(p, "E2_Books_44.5", V(144.5f, 41.5f, 99), 4, 6f, 6f);
             BookStack(p, "E2_Books_46", V(144.5f, 41.5f, 107), 6, 6f, 6f);
             BookStack(p, "E2_Books_47.5", V(144.5f, 41.5f, 115), 8, 6f, 6f);
-            Label(p, "3. Стопки на столе → нижняя полка → верхняя полка", V(138, 36, 55));
         }
 
         // ================= Маршрут 4: книжный шкаф =================
@@ -502,7 +490,6 @@ namespace HouseCreators.EditorTools
             BookStack(p, "C_Stack_52", V(95.5f, 49, 115.5f), 4, 4f, 7f);
             BookStack(p, "C_Stack_53.5", V(91.5f, 49, 115), 6, 4f, 6f);
             BookStack(p, "C_Stack_55", V(91.5f, 49, 121), 8, 4f, 5f);
-            Label(p, "4. Книжный шкаф: барьер, провал 6 м (с разбега), лаз под книгой (присед)", V(115, 57, 113));
         }
 
         // ================= Маршрут 5: дверь, платяной шкаф, люк =================
@@ -542,7 +529,6 @@ namespace HouseCreators.EditorTools
                 Carton(p, $"W_Box_{top}", V(x0, 56, zMin), V(x0 + 3, top, zMax));
             }
             Box(p, "HatchCover", V(32, 56, 100), V(46, 56.5f, 105), "Ceiling");
-            Label(p, "5. Наличник двери → шкаф → коробки лесенкой → люк на чердак", V(30, 64, 110));
         }
 
         static void Lighting(Transform p)
@@ -838,16 +824,6 @@ namespace HouseCreators.EditorTools
             var t = new GameObject(name).transform;
             t.SetParent(parent, false);
             return t;
-        }
-
-        static void Label(Transform p, string text, Vector3 pos)
-        {
-            var go = new GameObject("Label");
-            go.transform.SetParent(p, false);
-            go.transform.position = pos;
-            var l = go.AddComponent<BlockoutLabel>();
-            l.text = text;
-            l.color = new Color(1f, 0.85f, 0.3f);
         }
 
         static void BuildPlayer(Vector3 position, float yaw)
