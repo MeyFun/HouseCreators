@@ -302,20 +302,15 @@ namespace HouseCreators.EditorTools
             Box(p, "Footprint_L", c + V(-3, 1.5f, -2), c + V(-0.5f, 1.6f, 5), "MetalDark");
             Box(p, "Footprint_R", c + V(0.5f, 1.5f, -2), c + V(3, 1.6f, 5), "MetalDark");
 
-            // Стеклянная труба из сегментов, дверной проём на юго-восток
-            var glass = Group(p, "Glass");
-            const int segments = 32;
-            float segW = 2f * Mathf.PI * r / segments * 1.06f;
+            // Стеклянная колба: полый цилиндр с дверным проёмом на юго-восток
             float doorAngle = -45f;
-            for (int i = 0; i < segments; i++)
-            {
-                float a = i * 360f / segments;
-                if (Mathf.Abs(Mathf.DeltaAngle(a, doorAngle)) < 24f) continue;
-                var seg = Box(glass, "Segment_" + i, V(-segW * 0.5f, 0, -0.3f), V(segW * 0.5f, top - 1.5f, 0.3f), "CapsuleGlass");
-                float rad = a * Mathf.Deg2Rad;
-                seg.transform.position = c + new Vector3(Mathf.Cos(rad) * r, 1.5f + (top - 1.5f) * 0.5f, Mathf.Sin(rad) * r);
-                seg.transform.rotation = Quaternion.Euler(0, 90f - a, 0);
-            }
+            var glass = new GameObject("Glass");
+            glass.transform.SetParent(p, false);
+            glass.transform.position = c + Vector3.up * 1.5f;
+            var tube = SaveMesh(BuildTube(r, 0.6f, top - 1.5f, doorAngle, 24f, 72), "CapsuleGlass");
+            glass.AddComponent<MeshFilter>().sharedMesh = tube;
+            glass.AddComponent<MeshRenderer>().sharedMaterial = mats["CapsuleGlass"];
+            glass.AddComponent<MeshCollider>().sharedMesh = tube;
             foreach (var side in new[] { doorAngle - 25f, doorAngle + 25f })
             {
                 float rad = side * Mathf.Deg2Rad;
@@ -755,6 +750,78 @@ namespace HouseCreators.EditorTools
                 Box(t, "Leg", V(lx, 0, lz), V(lx + leg, topY - 1.5f, lz + leg), "MetalDark");
         }
 
+        // Полый цилиндр (труба) с вырезом: внешняя и внутренняя стенки, торцы сверху/снизу и по краям выреза.
+        static Mesh BuildTube(float radius, float thickness, float height, float gapCenterDeg, float gapHalfDeg, int steps)
+        {
+            var verts = new List<Vector3>();
+            var normals = new List<Vector3>();
+            var uvs = new List<Vector2>();
+            var tris = new List<int>();
+            float rIn = radius - thickness * 0.5f, rOut = radius + thickness * 0.5f;
+            float start = gapCenterDeg + gapHalfDeg, span = 360f - 2f * gapHalfDeg;
+
+            Vector3 Dir(float deg) => new Vector3(Mathf.Cos(deg * Mathf.Deg2Rad), 0f, Mathf.Sin(deg * Mathf.Deg2Rad));
+            Vector3 Tangent(float deg) => new Vector3(-Mathf.Sin(deg * Mathf.Deg2Rad), 0f, Mathf.Cos(deg * Mathf.Deg2Rad));
+
+            // Четырёхугольник a-b-c-d; порядок треугольников подбирается так, чтобы лицевая сторона смотрела по faceNormal
+            void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 na, Vector3 nb, Vector3 nc, Vector3 nd, Vector3 faceNormal, float u0, float u1)
+            {
+                int i = verts.Count;
+                verts.AddRange(new[] { a, b, c, d });
+                normals.AddRange(new[] { na, nb, nc, nd });
+                uvs.AddRange(new[] { new Vector2(u0, 0), new Vector2(u1, 0), new Vector2(u1, 1), new Vector2(u0, 1) });
+                bool flip = Vector3.Dot(Vector3.Cross(b - a, c - a), faceNormal) < 0f;
+                tris.AddRange(flip ? new[] { i, i + 2, i + 1, i, i + 3, i + 2 } : new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
+            }
+
+            for (int s = 0; s < steps; s++)
+            {
+                float a0 = start + span * s / steps, a1 = start + span * (s + 1) / steps;
+                float u0 = (float)s / steps, u1 = (float)(s + 1) / steps;
+                Vector3 d0 = Dir(a0), d1 = Dir(a1), up = Vector3.up * height;
+                Quad(d0 * rOut, d1 * rOut, d1 * rOut + up, d0 * rOut + up, d0, d1, d1, d0, (d0 + d1) * 0.5f, u0, u1);
+                Quad(d0 * rIn, d1 * rIn, d1 * rIn + up, d0 * rIn + up, -d0, -d1, -d1, -d0, -(d0 + d1) * 0.5f, u0, u1);
+                Quad(d0 * rIn + up, d1 * rIn + up, d1 * rOut + up, d0 * rOut + up, Vector3.up, Vector3.up, Vector3.up, Vector3.up, Vector3.up, u0, u1);
+                Quad(d0 * rIn, d1 * rIn, d1 * rOut, d0 * rOut, Vector3.down, Vector3.down, Vector3.down, Vector3.down, Vector3.down, u0, u1);
+            }
+            foreach (var (deg, outward) in new[] { (start, -Tangent(start)), (start + span, Tangent(start + span)) })
+            {
+                Vector3 d = Dir(deg), up = Vector3.up * height;
+                Quad(d * rIn, d * rOut, d * rOut + up, d * rIn + up, outward, outward, outward, outward, outward, 0, 1);
+            }
+
+            var mesh = new Mesh { name = "CapsuleGlass" };
+            mesh.SetVertices(verts);
+            mesh.SetNormals(normals);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(tris, 0);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        // Сетка хранится ассетом, чтобы сцена ссылалась на неё, а не держала копию внутри себя
+        static Mesh SaveMesh(Mesh mesh, string name)
+        {
+            const string dir = "Assets/WorkshopRoom/Meshes";
+            if (!AssetDatabase.IsValidFolder(dir)) AssetDatabase.CreateFolder("Assets/WorkshopRoom", "Meshes");
+            string path = $"{dir}/{name}.asset";
+            var existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (existing == null)
+            {
+                AssetDatabase.CreateAsset(mesh, path);
+                return mesh;
+            }
+            existing.Clear();
+            existing.SetVertices(mesh.vertices);
+            existing.SetNormals(mesh.normals);
+            existing.SetUVs(0, mesh.uv);
+            existing.SetTriangles(mesh.triangles, 0);
+            existing.RecalculateBounds();
+            EditorUtility.SetDirty(existing);
+            AssetDatabase.SaveAssets();
+            return existing;
+        }
+
         // Плита с прямоугольными вырезами: режем по всем границам вырезов на ячейки.
         static void SlabWithHoles(Transform p, string name, Rect area, float y0, float y1, string mat, params Rect[] holes)
         {
@@ -961,6 +1028,7 @@ namespace HouseCreators.EditorTools
                 m.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
                 m.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
                 m.SetInt("_ZWrite", 0);
+                m.SetFloat("_Cull", 0f); // стекло видно с обеих сторон
                 m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
                 m.renderQueue = (int)RenderQueue.Transparent;
             }
