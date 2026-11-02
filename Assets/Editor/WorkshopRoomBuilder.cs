@@ -67,11 +67,11 @@ namespace HouseCreators.EditorTools
             new Node("Обувная коробка 4.5", 52.5f, 4.5f, 10, jump: true),
             new Node("Коробка 6", 64, 6f, 10, jump: true),
             new Node("Коробка 7.5", 75, 7.5f, 10, jump: true),
-            new Node("Банка краски 9", 85, 9f, 9, jump: true),
-            new Node("Ящик с инструментами 10.5", 74, 10.5f, 20, jump: true, run: true),
-            new Node("Сиденье кресла 12", 84, 12f, 21, jump: true),
-            new Node("Подлокотник 13.5", 86, 13.5f, 25.5f, jump: true),
-            new Node("Мусорное ведро 15", 85, 15f, 32, jump: true),
+            new Node("Банка краски 9", 72, 9f, 21, jump: true, run: true),
+            new Node("Ящик с инструментами 10.5", 79, 10.5f, 30, jump: true, run: true),
+            new Node("Сиденье кресла", 84, 13f, 23, jump: true),
+            new Node("Книги у кресла 13.5", 89, 13.5f, 29.5f, jump: true),
+            new Node("Мусорное ведро 15", 85, 15f, 40, jump: true, run: true),
             // 2. Комод-лесенка → стол
             new Node("Ящик 16.5", 91.5f, 16.5f, 39, jump: true),
             new Node("Ящик 18", 94.5f, 18f, 39, jump: true),
@@ -251,15 +251,13 @@ namespace HouseCreators.EditorTools
 
         static void Decor(Transform p)
         {
-            // Окно, шторы, батарея
+            // Окно: панель с окнами из Sci-Fi Office Pack, за стёклами — светящееся «небо»
             var window = Group(p, "Window");
             Box(window, "Glass_Sky", V(30, 22, T), V(80, 52, T + 0.1f), "WindowSky");
-            Box(window, "Sill", V(28, 20.5f, T), V(82, 22, T + 2.5f), "Trim");
-            Box(window, "Frame_Top", V(29, 51.5f, T), V(81, 53, T + 0.8f), "Trim");
-            Box(window, "Frame_L", V(29, 22, T), V(30.5f, 52, T + 0.8f), "Trim");
-            Box(window, "Frame_R", V(79.5f, 22, T), V(81, 52, T + 0.8f), "Trim");
-            Box(window, "Frame_Mid", V(54.3f, 22, T), V(55.7f, 52, T + 0.6f), "Trim");
-            Box(window, "Frame_Cross", V(30, 36.3f, T), V(80, 37.7f, T + 0.6f), "Trim");
+            var windowSet = PrefabFit(window, Scifi + "Wall/Wall Window Set 10.prefab", 0f, V(30, 21, T + 0.1f), V(80, 52.5f, T + 2f), "WindowSet");
+            // Стёкла префаба непрозрачные — на этом экземпляре ставим прозрачное стекло, чтобы было видно «небо»
+            foreach (var r in windowSet.GetComponentsInChildren<Renderer>().Where(r => r.name.StartsWith("Glass Plane")))
+                r.sharedMaterial = mats["CapsuleGlass"];
             Box(window, "Curtain_L", V(22, 18, T + 0.5f), V(29, 56, T + 2.5f), "Curtain");
             Box(window, "Curtain_R", V(81, 18, T + 0.5f), V(88, 56, T + 2.5f), "Curtain");
             Box(window, "CurtainRod", V(18, 57, T + 1f), V(92, 58, T + 2f), "Metal");
@@ -282,8 +280,11 @@ namespace HouseCreators.EditorTools
             Box(peg, "Hammer_Head", V(W - T - 1.6f, 47, 17), V(W - T - 0.6f, 50, 23), "MetalDark");
             Box(peg, "Pliers", V(W - T - 1.2f, 38, 23.5f), V(W - T - 0.6f, 50, 26.5f), "Plastic_Red");
 
-            Box(p, "Rug", V(78, 0, 12), V(122, 0.12f, 50), "Rug");
-            Sphere(p, "PaperBall_1", V(95, 1.6f, 30), 1.6f, "Paper");
+            // Ковёр из Sci-Fi Office Pack, комод (декор) и стеллаж из наборов
+            PrefabFit(p, Scifi + "Carpets and Floors/Carpet 11.prefab", 90f, V(73, 0, 15.75f), V(123, 0.25f, 46.25f), "Carpet");
+            PrefabFit(p, Nappin + "(Prb)Dresser.prefab", -90f, V(2, 0, T), V(22, 15, 11.1f), "Dresser");
+            PrefabFit(p, Scifi + "Shelf without Crates.prefab", 0f, V(T, 0, 55), V(16.5f, 35.5f, 97), "Rack");
+            Sphere(p, "PaperBall_1", V(106, 1.6f, 52), 1.6f, "Paper");
             Sphere(p, "PaperBall_2", V(60, 1.3f, 60), 1.3f, "Paper");
             Sphere(p, "PaperBall_3", V(110, 1.4f, 70), 1.4f, "Paper");
             Cyl(p, "Nut", V(48, 0, 22), 1.2f, 0.8f, "Metal");
@@ -357,33 +358,22 @@ namespace HouseCreators.EditorTools
             Box(shoebox, "Lid", V(47.8f, 3.9f, 5.5f), V(57.2f, 4.5f, 14.5f), "ShoeboxLid");
             Carton(p, "R4_Box_6", V(60, 0, 6), V(68, 6, 14));
             Carton(p, "R5_Box_7.5", V(71, 0, 6), V(79, 7.5f, 14));
-            PaintCan(p, "R6_PaintCan_9", V(85, 0, 9), 3.2f, 9f, "Paint_Blue");
-            PaintCan(p, "Decor_PaintCan", V(96, 0, 8), 3.2f, 6f, "Paint_Green");
+            PaintCan(p, "R6_PaintCan_9", V(72, 0, 21), 3.2f, 9f, "Paint_Blue");
+            PaintCan(p, "Decor_PaintCan", V(110, 0, 8), 3.2f, 6f, "Paint_Green");
 
             var toolbox = Group(p, "R7_Toolbox_10.5");
-            Box(toolbox, "Body", V(68, 0, 15), V(78, 9.5f, 25), "Toolbox");
-            Box(toolbox, "Lid", V(67.8f, 9.5f, 14.8f), V(78.2f, 10.5f, 25.2f), "ToolboxLid");
-            Box(toolbox, "Latch", V(72, 7.5f, 14.7f), V(74, 9.5f, 15), "Metal");
+            Box(toolbox, "Body", V(74, 0, 26.5f), V(84, 9.5f, 34), "Toolbox");
+            Box(toolbox, "Lid", V(73.8f, 9.5f, 26.3f), V(84.2f, 10.5f, 34.2f), "ToolboxLid");
+            Box(toolbox, "Latch", V(73.7f, 7.5f, 29), V(74, 9.5f, 31), "Metal");
 
-            // Кресло лицом на запад: сиденье 12, подлокотники 13.5, спинка на востоке
-            var chair = Group(p, "R8_OfficeChair");
-            for (int i = 0; i < 5; i++)
-            {
-                float a = i * Mathf.PI * 2f / 5f;
-                var leg = Box(chair, "BaseLeg_" + i, V(-0.6f, 1.2f, 0), V(0.6f, 2.2f, 6.5f), "ChairPlastic");
-                leg.transform.position = V(86 + Mathf.Sin(a) * 3.25f, 1.7f, 21 + Mathf.Cos(a) * 3.25f);
-                leg.transform.rotation = Quaternion.Euler(0, a * Mathf.Rad2Deg, 0);
-                Sphere(chair, "Caster_" + i, V(86 + Mathf.Sin(a) * 6.3f, 0.8f, 21 + Mathf.Cos(a) * 6.3f), 0.8f, "ChairPlastic");
-            }
-            Cyl(chair, "GasLift", V(86, 2, 21), 0.9f, 8.5f, "Metal");
-            Box(chair, "Seat", V(80, 10.5f, 15), V(92, 12, 27), "ChairFabric");
-            Box(chair, "Backrest", V(92, 14, 16), V(94, 31, 26), "ChairFabric");
-            Box(chair, "Backrest_Post", V(92, 11, 20), V(93.5f, 14, 22), "ChairPlastic");
-            Box(chair, "Armrest_N", V(81, 12, 24), V(91, 13.5f, 27), "ChairPlastic");
-            Box(chair, "Armrest_S", V(81, 12, 15), V(91, 13.5f, 18), "ChairPlastic");
+            // Офисное кресло из Sci-Fi Office Pack, сиденьем к ящику с инструментами (спинка на юге).
+            // Сиденье — ступень маршрута, его точную высоту берём лучом после установки.
+            PrefabAt(p, Scifi + "Chairs and Stools/Office Chair.prefab", 24f, 180f, 88, 16, 0f, "R8_OfficeChair");
+            SetNodeY("Сиденье кресла", SurfaceY(84, 23, 30));
+            BookStack(p, "R8_Books_13.5", V(89, 0, 30), 18, 6f, 6f);
 
-            Cyl(p, "R9_Bin", V(85, 0, 33), 5f, 14.4f, "BinMetal");
-            Cyl(p, "R9_Bin_Lid", V(85, 14.4f, 33), 5.2f, 0.6f, "MetalDark");
+            Cyl(p, "R9_Bin", V(85, 0, 40), 5f, 14.4f, "BinMetal");
+            Cyl(p, "R9_Bin_Lid", V(85, 14.4f, 40), 5.2f, 0.6f, "MetalDark");
         }
 
         // ================= Маршрут 2: комод с ящиками-лесенкой =================
@@ -408,14 +398,15 @@ namespace HouseCreators.EditorTools
 
         static void Desk(Transform p)
         {
-            Table(p, "Desk", 124, W - T, 10, 80, 25f);
-            Box(p, "Desk_DrawerUnit", V(136, 0, 66), V(W - T, 23.5f, 80), "WoodDark");
-            Box(p, "PC_Tower", V(126, 0, 50), V(134, 11, 60), "PC");
-            Box(p, "Monitor_Stand", V(126.5f, 25, 21), V(128.5f, 30, 25), "PC");
-            Box(p, "Monitor", V(126, 30, 14), V(128.5f, 40, 32), "PC");
-            Box(p, "Monitor_Screen", V(125.9f, 30.6f, 14.6f), V(126, 39.4f, 31.4f), "Screen");
-            Box(p, "Keyboard", V(129.5f, 25, 16), V(135, 25.4f, 30), "PC");
-            Cyl(p, "Mug", V(132, 25, 34), 1.8f, 4f, "Mug");
+            // Стол из Sci-Fi Office Pack вдоль восточной стены; столешница на высоте 25 (бортик чуть выше)
+            PrefabFit(p, Scifi + "Tables/Dark Oak/Drawer Table Long Dark Oak.prefab", 90f, V(124, 0, 10), V(W - T, 25.5f, 80), "Desk");
+            // Техника из Next-gen Electronics Pack и лампа из House Interior
+            PrefabAt(p, Electronics + "monitor.prefab", 25f, -90f, 130, 23, 25f, "Monitor");
+            PrefabAt(p, Electronics + "keyboard.prefab", 25f, -90f, 135.5f, 23, 25f, "Keyboard");
+            PrefabAt(p, Electronics + "mouse.prefab", 25f, -90f, 135.5f, 33, 25f, "Mouse");
+            PrefabAt(p, Electronics + "pc.prefab", 25f, -90f, 130, 55, 0f, "PC");
+            PrefabAt(p, Nappin + "(Prb)DeskLight.prefab", 12.5f, -90f, 126.5f, 77, 25f, "DeskLight");
+            Cyl(p, "Mug", V(132, 25, 36), 1.8f, 4f, "Mug");
             Box(p, "Pickup_Notebook", V(130, 25, 74), V(135, 25.6f, 78), "Pickup", trigger: true);
 
             BookStack(p, "D1_Books_26.5", V(135.5f, 25, 65), 2, 6f, 6f);
@@ -423,13 +414,10 @@ namespace HouseCreators.EditorTools
             BookStack(p, "D3_Books_29.5", V(135.5f, 25, 49), 6, 6f, 6f);
             BookStack(p, "D4_Books_31", V(135.5f, 25, 41), 8, 6f, 6f);
 
-            // Нижняя полка 32.5 (z 10–80) и верхняя 41.5 (z 82–122) на восточной стене
-            Box(p, "Shelf_Low_32.5", V(141, 31.5f, 10), V(W - T, 32.5f, 80), "Wood");
-            Box(p, "Shelf_High_41.5", V(141, 40.5f, 82), V(W - T, 41.5f, D - T - 1), "Wood");
-            foreach (var bz in new[] { 12f, 45f, 77f })
-                Box(p, "Bracket_Low", V(W - T - 1.2f, 27, bz), V(W - T, 31.5f, bz + 1.2f), "MetalDark");
-            foreach (var bz in new[] { 84f, 120f })
-                Box(p, "Bracket_High", V(W - T - 1.2f, 36, bz), V(W - T, 40.5f, bz + 1.2f), "MetalDark");
+            // Нижняя полка 32.5 (z 10–80) и верхняя 41.5 (z 82–122): каждая собрана из полок Shelf1 (House Interior) подряд,
+            // чтобы короткий префаб не растягивать на всю длину
+            ShelfRow(p, "Shelf_Low_32.5", 32.5f, 10, 80, 3);
+            ShelfRow(p, "Shelf_High_41.5", 41.5f, 82, D - T - 1, 2);
 
             BookStack(p, "E1_Books_34", V(144.5f, 32.5f, 45), 2, 6f, 6f);
             BookStack(p, "E1_Books_35.5", V(144.5f, 32.5f, 53), 4, 6f, 6f);
@@ -491,24 +479,14 @@ namespace HouseCreators.EditorTools
 
         static void DoorAndWardrobe(Transform p)
         {
-            // Дверь с наличником на северной стене; верх наличника — узкий карниз 2 м
+            // Дверь из House Interior (с коробкой) на северной стене; сверху свой наличник — узкий карниз 2 м
             var door = Group(p, "Door");
-            Box(door, "Leaf", V(58, 0.4f, D - T - 1), V(86, 52.5f, D - T), "DoorWood");
-            Box(door, "Panel_1", V(61, 30, D - T - 1.3f), V(83, 48, D - T - 1), "DoorWoodDark");
-            Box(door, "Panel_2", V(61, 5, D - T - 1.3f), V(83, 25, D - T - 1), "DoorWoodDark");
-            Box(door, "Jamb_W", V(56, 0, D - T - 2), V(58, 52.5f, D - T), "Trim");
-            Box(door, "Jamb_E", V(86, 0, D - T - 2), V(88, 52.5f, D - T), "Trim");
+            PrefabFit(door, Nappin + "(Prb)Door.prefab", -90f, V(56, 0, D - T - 5), V(88, 52.5f, D - T), "Door");
             Box(door, "Lintel_54.5", V(56, 52.5f, D - T - 2), V(88, 54.5f, D - T), "Trim");
-            Sphere(door, "Knob", V(82, 26, D - T - 1.8f), 1.2f, "Brass");
 
-            // Платяной шкаф в северо-западном углу (верх 56)
-            var wardrobe = Group(p, "Wardrobe");
-            Box(wardrobe, "Body", V(T, 0, 98), V(52, 55, D - T), "Wood");
-            Box(wardrobe, "Top", V(T, 55, 97.5f), V(52.5f, 56, D - T), "WoodDark");
-            Box(wardrobe, "Door_L", V(3, 3, 97.6f), V(26.5f, 53, 98), "WoodLight");
-            Box(wardrobe, "Door_R", V(27, 3, 97.6f), V(50.5f, 53, 98), "WoodLight");
-            Box(wardrobe, "Handle_L", V(24.5f, 24, 96.9f), V(25.5f, 32, 97.6f), "Brass");
-            Box(wardrobe, "Handle_R", V(28, 24, 96.9f), V(29, 32, 97.6f), "Brass");
+            // Платяной шкаф из House Interior в северо-западном углу: корпус вписан в 1.5–52 × 98–123.5, верх 56.
+            // Приоткрытые дверцы и выдвинутые ящики префаба выступают в комнату.
+            PrefabFit(p, Nappin + "(Prb)Wardrobe.prefab", 90f, V(T, 0, 98), V(52, 56, D - T), "Wardrobe", "wardrobe_body");
 
             // Хлам на шкафу: чемодан, шляпная коробка, коробки лесенкой под люк
             var suitcase = Group(p, "W_Suitcase_57.5");
@@ -621,7 +599,9 @@ namespace HouseCreators.EditorTools
                     if (cc.isGrounded)
                     {
                         // Как игрок: прыгаем у края или перед препятствием (в приседе прыгать нельзя)
-                        if (node.jump && !jumped && !crouched && dist > 0.3f && ShouldJump(pos, to / dist))
+                        // Повторный прыжок разрешён только если после приземления цель всё ещё выше (как поступил бы игрок)
+                        bool canJump = !jumped || node.pos.y - pos.y > 0.45f;
+                        if (node.jump && canJump && !crouched && dist > 0.3f && ShouldJump(pos, to / dist))
                         {
                             vel.y = jumpV;
                             jumped = true;
@@ -740,14 +720,15 @@ namespace HouseCreators.EditorTools
             Cyl(can, "Label", bottom + Vector3.up * h * 0.25f, r + 0.05f, h * 0.45f, labelMat);
         }
 
-        static void Table(Transform p, string name, float x0, float x1, float z0, float z1, float topY)
+        // Настенная полка у восточной стены из нескольких Shelf1 подряд; верх полки на высоте topY
+        static void ShelfRow(Transform p, string name, float topY, float z0, float z1, int pieces)
         {
-            var t = Group(p, name);
-            Box(t, "Top", V(x0, topY - 1.5f, z0), V(x1, topY, z1), "DeskWood");
-            Box(t, "Edge", V(x0 - 0.3f, topY - 1.8f, z0), V(x0, topY, z1), "WoodDark");
-            const float leg = 2f;
-            foreach (var (lx, lz) in new[] { (x0, z0), (x1 - leg, z0), (x0, z1 - leg), (x1 - leg, z1 - leg) })
-                Box(t, "Leg", V(lx, 0, lz), V(lx + leg, topY - 1.5f, lz + leg), "MetalDark");
+            var row = Group(p, name);
+            const float depth = 7.5f, thick = 3.9f;
+            float len = (z1 - z0) / pieces;
+            for (int i = 0; i < pieces; i++)
+                PrefabFit(row, Nappin + "(Prb)Shelf1.prefab", 180f,
+                    V(W - T - depth, topY - thick, z0 + i * len), V(W - T, topY, z0 + (i + 1) * len), "Shelf_" + (i + 1));
         }
 
         // Полый цилиндр (труба) с вырезом: внешняя и внутренняя стенки, торцы сверху/снизу и по краям выреза.
@@ -841,6 +822,73 @@ namespace HouseCreators.EditorTools
                     if (holes.Any(h => h.Contains(center))) continue;
                     Box(p, $"{name}_{i}_{j}", V(xa[i], y0, za[j]), V(xa[i + 1], y1, za[j + 1]), mat);
                 }
+        }
+
+        // ================= Префабы из импортированных наборов =================
+
+        const string Nappin = "Assets/nappin/HouseInteriorPack/Prefabs/";
+        const string Scifi = "Assets/ScifiOfficeLite/Prefabs/";
+        const string Electronics = "Assets/Next-gen Electronics Pack/Prefabs/";
+
+        // Экземпляр префаба с физикой: невыпуклые MeshCollider (по ним можно ходить), коллайдеры для мешей без них
+        static GameObject Prefab(Transform parent, string path, string name = null)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (asset == null) throw new System.Exception("Prefab not found: " + path);
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(asset, parent);
+            if (name != null) go.name = name;
+            foreach (var mc in go.GetComponentsInChildren<MeshCollider>()) mc.convex = false;
+            foreach (var mf in go.GetComponentsInChildren<MeshFilter>())
+                if (mf.sharedMesh != null && mf.GetComponent<Collider>() == null)
+                    mf.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
+            return go;
+        }
+
+        // Префаб, вписанный в коробку min..max (поворот кратен 90°). fitChild — часть, по которой подгонять (например, корпус шкафа без дверец).
+        static GameObject PrefabFit(Transform parent, string path, float yaw, Vector3 min, Vector3 max, string name = null, string fitChild = null)
+        {
+            var go = Prefab(parent, path, name);
+            var baseScale = go.transform.localScale;
+            go.transform.rotation = Quaternion.Euler(0, yaw, 0);
+            var b = FitBounds(go, fitChild);
+            var size = max - min;
+            var k = new Vector3(size.x / b.size.x, size.y / b.size.y, size.z / b.size.z);
+            bool swap = Mathf.Abs(Mathf.Sin(yaw * Mathf.Deg2Rad)) > 0.5f; // при повороте на 90° оси X и Z меняются местами
+            go.transform.localScale = Vector3.Scale(baseScale, swap ? new Vector3(k.z, k.y, k.x) : k);
+            go.transform.position += min - FitBounds(go, fitChild).min;
+            return go;
+        }
+
+        // Префаб с равномерным масштабом: низ на baseY, центр по X/Z в точке (x, z)
+        static GameObject PrefabAt(Transform parent, string path, float scale, float yaw, float x, float z, float baseY = 0f, string name = null)
+        {
+            var go = Prefab(parent, path, name);
+            go.transform.localScale *= scale;
+            go.transform.rotation = Quaternion.Euler(0, yaw, 0);
+            var b = FitBounds(go, null);
+            go.transform.position += new Vector3(x - b.center.x, baseY - b.min.y, z - b.center.z);
+            return go;
+        }
+
+        static Bounds FitBounds(GameObject go, string child)
+        {
+            var rs = go.GetComponentsInChildren<Renderer>().Where(r => child == null || r.name == child).ToArray();
+            var b = rs[0].bounds;
+            foreach (var r in rs) b.Encapsulate(r.bounds);
+            return b;
+        }
+
+        // Высота поверхности под точкой (луч сверху вниз)
+        static float SurfaceY(float x, float z, float fromY)
+        {
+            Physics.SyncTransforms();
+            return Physics.Raycast(V(x, fromY, z), Vector3.down, out var hit, fromY + 1f, ~0, QueryTriggerInteraction.Ignore) ? hit.point.y : 0f;
+        }
+
+        static void SetNodeY(string name, float y)
+        {
+            int i = System.Array.FindIndex(Route, n => n.name == name);
+            Route[i].pos.y = y;
         }
 
         // ================= Примитивы (все с коллайдерами) =================
